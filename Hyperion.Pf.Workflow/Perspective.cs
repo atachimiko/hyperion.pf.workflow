@@ -90,6 +90,28 @@ namespace Hyperion.Pf.Workflow
         }
 
         /// <summary>
+        /// パースペクティブからコンテントを除去します
+        /// </summary>
+        /// <param name="frameName"></param>
+        internal void RemoveContent(string frameName)
+        {
+            _ContentDict.Remove(frameName);
+        }
+
+        /// <summary>
+        /// パースペクティブからコンテントを除去します
+        /// </summary>
+        /// <param name="disposedContent">除去するコンテント</param>
+        internal void RemoveContent(Content disposedContent)
+        {
+            var myKey = _ContentDict.FirstOrDefault(x => x.Value == disposedContent).Key;
+            if (myKey != null)
+            {
+                _ContentDict.Remove(myKey);
+            }
+        }
+
+        /// <summary>
         /// コンストラクタ
         /// </summary>
         /// <param name="PerspectiveName">パースペクティブ名</param>

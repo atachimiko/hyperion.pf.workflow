@@ -5,6 +5,8 @@ VisualStudioVersion = 15.0.26124.0
 MinimumVisualStudioVersion = 15.0.26124.0
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hyperion.Pf.Workflow", "Hyperion.Pf.Workflow\Hyperion.Pf.Workflow.csproj", "{6A3994BD-0522-474A-81CA-3ECE16F09C77}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hyperion.Pf.Workflow.Tests", "Hyperion.Pf.Workflow.Tests\Hyperion.Pf.Workflow.Tests.csproj", "{8AD1F40D-5330-4652-8F24-AE1B4E51895E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -30,5 +32,17 @@ Global
 		{6A3994BD-0522-474A-81CA-3ECE16F09C77}.Release|x64.Build.0 = Release|x64
 		{6A3994BD-0522-474A-81CA-3ECE16F09C77}.Release|x86.ActiveCfg = Release|x86
 		{6A3994BD-0522-474A-81CA-3ECE16F09C77}.Release|x86.Build.0 = Release|x86
+		{8AD1F40D-5330-4652-8F24-AE1B4E51895E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8AD1F40D-5330-4652-8F24-AE1B4E51895E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8AD1F40D-5330-4652-8F24-AE1B4E51895E}.Debug|x64.ActiveCfg = Debug|x64
+		{8AD1F40D-5330-4652-8F24-AE1B4E51895E}.Debug|x64.Build.0 = Debug|x64
+		{8AD1F40D-5330-4652-8F24-AE1B4E51895E}.Debug|x86.ActiveCfg = Debug|x86
+		{8AD1F40D-5330-4652-8F24-AE1B4E51895E}.Debug|x86.Build.0 = Debug|x86
+		{8AD1F40D-5330-4652-8F24-AE1B4E51895E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8AD1F40D-5330-4652-8F24-AE1B4E51895E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8AD1F40D-5330-4652-8F24-AE1B4E51895E}.Release|x64.ActiveCfg = Release|x64
+		{8AD1F40D-5330-4652-8F24-AE1B4E51895E}.Release|x64.Build.0 = Release|x64
+		{8AD1F40D-5330-4652-8F24-AE1B4E51895E}.Release|x86.ActiveCfg = Release|x86
+		{8AD1F40D-5330-4652-8F24-AE1B4E51895E}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 EndGlobal
