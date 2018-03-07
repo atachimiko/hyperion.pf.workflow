@@ -15,7 +15,7 @@ namespace Hyperion.Pf.Workflow
         /// <summary>
         /// 各フレームのコンテントスタック
         /// </summary>
-        private readonly FrameList _FrameList = new FrameList();
+        internal readonly FrameList _FrameList = new FrameList();
 
         /// <summary>
         /// 定義済みパースペクティブ一覧
@@ -25,6 +25,29 @@ namespace Hyperion.Pf.Workflow
         /// スタック内のオブジェクトを使いまわすため、Stack型ではなくLinkedList型を使用しています。
         /// </remarks>
         private readonly LinkedList<Perspective> _DefinedPerspectiveList = new LinkedList<Perspective>();
+
+        /// <summary>
+        /// 定義済みコンテント一覧
+        /// </summary>
+        /// <remarks>
+        /// ワークフローが管理するコンテント一覧です。
+        /// パースペクティブは、この一覧の中に含まれているコンテントのみを使用できます。
+        /// </remarks>
+        /// <returns></returns>
+        private readonly Dictionary<string, Content> _DeclaredContentList = new Dictionary<string, Content>();
+
+        public void Verify(List<IContentBuilder> builderList)
+        {
+            foreach (var builder in builderList)
+            {
+                var content = builder.Build();
+                _DeclaredContentList.Add(content.Name, content);
+            }
+        }
+
+        internal Content GetContent(string contentName) {
+            return _DeclaredContentList[contentName];
+        }
 
         /// <summary>
         /// パースペクティブを開始する
@@ -46,7 +69,7 @@ namespace Hyperion.Pf.Workflow
                     result = doArbitration_AWAB(target);
                     break;
                 case ArbitrationMode.BWAB:
-                    // TODO:
+                    result = doArbitration_BWAB(target);
                     break;
                 case ArbitrationMode.OVERRIDE:
                     // TODO:
@@ -66,7 +89,7 @@ namespace Hyperion.Pf.Workflow
             //    ・開始コンテントのライフサイクル
             foreach (var endContent in result.EndContentList)
             {
-                endContent.End();
+                endContent.ToDestroy();
             }
 
             foreach (var startContent in result.StartContentList)
@@ -133,12 +156,6 @@ namespace Hyperion.Pf.Workflow
                     attachContent.Destroy();
                 }
 
-                foreach (Content attachContent in perspective.Contents)
-                {
-                    attachContent.Dispose();
-                    perspective.RemoveContent(attachContent);
-                }
-
                 perspective.Status = PerspectiveStatus.Deactive;
                 _DefinedPerspectiveList.Remove(perspective);
                 _DefinedPerspectiveList.AddLast(perspective);
@@ -200,7 +217,7 @@ namespace Hyperion.Pf.Workflow
                 Content startContent = null;
 
                 // コンテントを作成
-                var builder = pPerspective.GetContentBuilder(frameName);
+                //var builder = pPerspective.GetContentBuilder(frameName);
                 var stack = _FrameList.GetContentStack(frameName);
                 if (stack.Count > 0)
                 {
@@ -212,17 +229,19 @@ namespace Hyperion.Pf.Workflow
                 if (bPreEndSuccess)
                 {
                     // コンテント実態を作成
-                    startContent = builder.Build(pPerspective);
-                    startContent.OnInitialize();
+                    // TODO: コンテントは作成済みとする
+                    startContent = pPerspective.GetFrameContent(frameName);
+                    //startContent.OnInitialize(); // これ
 
                     _logger.Debug("{}フレームに新規コンテントの開始ライフサイクル処理を開始します", frameName);
-                    bPreStartSuccess = startContent.PreStart();
+                    bPreStartSuccess = startContent.PreStart(pPerspective);
 
                     if (bPreStartSuccess)
                     {
                         if (stack.Count > 0)
                         {
                             wEndContent = stack.Pop(); // スタックから除去する
+                            _logger.Debug("{}フレームのコンテントスタックから除去します", frameName);
                             result.EndContentList.Add(wEndContent);
                         }
 
@@ -230,14 +249,62 @@ namespace Hyperion.Pf.Workflow
                         // 新しいパースペクティブのコンテントをスタックに積む
                         stack.Push(startContent);
 
-                        pPerspective.AddContent(frameName, startContent);
                         result.StartContentList.Add(startContent);
                     }
                     else
                     {
-                        _logger.Debug("{}フレームの新規コンテントを追加に失敗しました。ロールバックを行います。", frameName);
+                        _logger.Warn("{}フレームの新規コンテントを追加に失敗しました。ロールバックを行います。", frameName);
                         // TODO: Stackのコンテント(wEndContent)のロールバック
                     }
+                }
+                else
+                {
+                    _logger.Warn("{}フレームの最上位コンテントの終了ライフサイクル処理に失敗しました", frameName);
+                }
+            }
+
+            return result;
+        }
+
+        private DoArbitrationResult doArbitration_BWAB(Perspective pPerspective)
+        {
+            _logger.Debug("BWAB調停処理を開始します");
+            DoArbitrationResult result = new DoArbitrationResult();
+
+            foreach (var frameName in pPerspective.FrameList)
+            {
+                bool bPreStartSuccess = false;
+                Content startContent = null;
+
+                // コンテントを作成
+                //var builder = pPerspective.GetContentBuilder(frameName);
+                var stack = _FrameList.GetContentStack(frameName);
+                if (stack.Count > 0)
+                {
+                    _logger.Debug("{}フレームの最上位コンテントが存在するためスキップします。", frameName);
+                    continue;
+                }
+
+                // コンテント実態を作成
+                // TODO: コンテントは作成済みとする
+                startContent = pPerspective.GetFrameContent(frameName);
+                //startContent.OnInitialize(); // これ
+
+                _logger.Debug("{}フレームに新規コンテントの開始ライフサイクル処理を開始します", frameName);
+                bPreStartSuccess = startContent.PreStart(pPerspective);
+
+                if (bPreStartSuccess)
+                {
+                    _logger.Debug("{}フレームのコンテントスタックに新規コンテントを追加します。", frameName);
+                    // 新しいパースペクティブのコンテントをスタックに積む
+                    stack.Push(startContent);
+
+                    result.StartContentList.Add(startContent);
+                }
+                else
+                {
+                    _logger.Warn("{}フレームの新規コンテントを追加に失敗しました。ロールバックを行います。", frameName);
+                    // TODO: Stackのコンテント(wEndContent)のロールバック
                 }
             }
 

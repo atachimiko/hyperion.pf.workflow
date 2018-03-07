@@ -29,14 +29,15 @@ namespace Hyperion.Pf.Workflow
         /// </summary>
         Perspective _Perspective;
 
+        string _Name;
+
         /// <summary>
         /// コンストラクタ
         /// </summary>
         /// <param name="attach">所属するパースペクティブ</param>
-        public Content(Perspective attach)
+        public Content(string contentName)
         {
-            this._Perspective = attach;
-
+            this._Name = contentName;
             this.Status = ContentStatus.Create;
         }
 
@@ -52,13 +53,17 @@ namespace Hyperion.Pf.Workflow
             {
                 bCheck = OnPreDestroy();
                 if (bCheck)
+                {
                     Status = ContentStatus.PreDestroy;
+                }
             }
             if (Status == ContentStatus.Suspend)
             {
                 bCheck = OnPreResume();
                 if (bCheck)
+                {
                     Status = ContentStatus.PreResume;
+                }
             }
             return bCheck;
         }
@@ -67,12 +72,20 @@ namespace Hyperion.Pf.Workflow
         /// 
         /// </summary>
         /// <returns></returns>
-        internal bool PreStart()
+        internal bool PreStart(Perspective attach)
         {
             bool bCheck = false;
+            var oldPerspective = Perspective;
+            _Perspective = attach;
             bCheck = OnStart();
             if (bCheck)
+            {
                 Status = ContentStatus.Start;
+            }
+            else
+            {
+                _Perspective = oldPerspective;
+            }
             return bCheck;
         }
 
@@ -80,7 +93,7 @@ namespace Hyperion.Pf.Workflow
         /// 終了ライフサイクル
         /// </summary>
         /// <returns></returns>
-        internal void End()
+        internal void ToDestroy()
         {
             if (Status == ContentStatus.PreResume)
             {
@@ -90,6 +103,7 @@ namespace Hyperion.Pf.Workflow
 
             OnDestroy();
             Status = ContentStatus.Destroy;
+            _Perspective = null;
         }
 
         /// <summary>
@@ -126,19 +140,33 @@ namespace Hyperion.Pf.Workflow
         /// </summary>
         public void Destroy()
         {
-            OnEnd();
-            Status = ContentStatus.End;
+            _Perspective = null;
         }
 
         /// <summary>
         /// 
         /// </summary>
-        public void Dispose() {
+        public void Dispose()
+        {
             _Perspective = null;
         }
 
+        /// <summary>
+        /// コンテント名を取得します
+        /// </summary>
+        /// <returns></returns>
+        public string Name { get { return _Name; } }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
         public Perspective Perspective { get { return _Perspective; } }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
         public ContentStatus Status { get; private set; }
 
         /// <summary>

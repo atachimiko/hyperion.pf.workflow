@@ -12,17 +12,14 @@ namespace Hyperion.Pf.Workflow
     /// </remarks>
     public class Perspective
     {
-        /// <summary>
-        /// フレーム名とコンテントとの対応辞書
-        /// </summary>
-        /// <returns></returns>
-        private readonly Dictionary<string, IContentBuilder> _ContentBuilderDict = new Dictionary<string, IContentBuilder>();
+        private readonly WorkflowManager _Context;
 
         /// <summary>
-        /// 
+        /// キー=フレーム名
+        /// 値=コンテント名
         /// </summary>
         /// <returns></returns>
-        private readonly Dictionary<string, Content> _ContentDict = new Dictionary<string, Content>();
+        private readonly Dictionary<string, string> _ContentDict = new Dictionary<string, string>();
 
         /// <summary>
         /// パースペクティブの状態を取得する
@@ -50,7 +47,7 @@ namespace Hyperion.Pf.Workflow
         {
             get
             {
-                return _ContentBuilderDict.Keys.ToArray();
+                return _ContentDict.Keys.ToArray();
             }
         }
 
@@ -62,18 +59,14 @@ namespace Hyperion.Pf.Workflow
         {
             get
             {
-                return _ContentDict.Values.ToArray();
-            }
-        }
+                var contentList = new List<Content>();
 
-        /// <summary>
-        /// コンテントビルダーを取得します
-        /// </summary>
-        /// <param name="FrameName">フレーム名</param>
-        /// <returns></returns>
-        public IContentBuilder GetContentBuilder(string FrameName)
-        {
-            return _ContentBuilderDict[FrameName];
+                foreach(var contentName in _ContentDict.Values){
+                    contentList.Add(_Context.GetContent(contentName));
+                }
+
+                return contentList.ToArray();
+            }
         }
 
         /// <summary>
@@ -81,35 +74,35 @@ namespace Hyperion.Pf.Workflow
         /// </summary>
         /// <param name="frameName">フレーム名</param>
         /// <param name="startContent">コンテント</param>
-        internal void AddContent(string frameName, Content startContent)
-        {
-            if (!_ContentDict.ContainsKey(frameName))
-                _ContentDict.Add(frameName, startContent);
-            else
-                throw new ApplicationException("指定のフレームにコンテントが割当済みです");
-        }
+        // internal void AddContent(string frameName, Content startContent)
+        // {
+        //     if (!_ContentDict.ContainsKey(frameName))
+        //         _ContentDict.Add(frameName, startContent);
+        //     else
+        //         throw new ApplicationException("指定のフレームにコンテントが割当済みです");
+        // }
+
+        // /// <summary>
+        // /// パースペクティブからコンテントを除去します
+        // /// </summary>
+        // /// <param name="frameName"></param>
+        // internal void RemoveContent(string frameName)
+        // {
+        //     _ContentDict.Remove(frameName);
+        // }
 
         /// <summary>
         /// パースペクティブからコンテントを除去します
         /// </summary>
-        /// <param name="frameName"></param>
-        internal void RemoveContent(string frameName)
-        {
-            _ContentDict.Remove(frameName);
-        }
-
-        /// <summary>
-        /// パースペクティブからコンテントを除去します
-        /// </summary>
-        /// <param name="disposedContent">除去するコンテント</param>
-        internal void RemoveContent(Content disposedContent)
-        {
-            var myKey = _ContentDict.FirstOrDefault(x => x.Value == disposedContent).Key;
-            if (myKey != null)
-            {
-                _ContentDict.Remove(myKey);
-            }
-        }
+        // /// <param name="disposedContent">除去するコンテント</param>
+        // internal void RemoveContent(Content disposedContent)
+        // {
+        //     var myKey = _ContentDict.FirstOrDefault(x => x.Value == disposedContent).Key;
+        //     if (myKey != null)
+        //     {
+        //         _ContentDict.Remove(myKey);
+        //     }
+        // }
 
         /// <summary>
         /// コンストラクタ
@@ -117,15 +110,23 @@ namespace Hyperion.Pf.Workflow
         /// <param name="PerspectiveName">パースペクティブ名</param>
         /// <param name="Mode">調停モード</param>
         /// <param name="ContentDict">フレーム別コンテントビルダー対応辞書</param>
-        public Perspective(string PerspectiveName, ArbitrationMode Mode, Dictionary<string, IContentBuilder> ContentDict)
+        public Perspective(string PerspectiveName, ArbitrationMode Mode, Dictionary<string, string> ContentDict, WorkflowManager context)
         {
+            this._Context = context;
             this.Name = PerspectiveName;
             this.Mode = Mode;
 
             foreach (var key in ContentDict.Keys)
             {
-                _ContentBuilderDict.Add(key, ContentDict[key]);
+                _ContentDict.Add(key, ContentDict[key]);
             }
+        }
+
+        internal Content GetFrameContent(string frameName)
+        {
+            // 異常系設計
+            var contentName = _ContentDict[frameName];
+            return _Context.GetContent(contentName);
         }
     }
 
