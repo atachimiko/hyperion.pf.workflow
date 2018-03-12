@@ -1,4 +1,5 @@
 using System;
+using NLog;
 
 namespace Hyperion.Pf.Workflow
 {
@@ -7,23 +8,26 @@ namespace Hyperion.Pf.Workflow
         Create,
 
         Initialize,
-        Start,
+        Idle,
         Run,
         Restart,
+        Stop,
         Suspend,
         Resume,
-        PreResume,
+        PreStop,
         Discontinue,
-        PreDestroy,
+        PreResume,
         Destroy,
         End
     }
 
     /// <summary>
-    /// ワークフローのインターフェース
+    /// コンテンツ
     /// </summary>
-    public abstract class Content : IDisposable
+    public abstract class Content
     {
+        private static Logger _logger = LogManager.GetCurrentClassLogger();
+
         /// <summary>
         /// 所属するパースペクティブ
         /// </summary>
@@ -31,125 +35,194 @@ namespace Hyperion.Pf.Workflow
 
         string _Name;
 
+
         /// <summary>
         /// コンストラクタ
         /// </summary>
-        /// <param name="attach">所属するパースペクティブ</param>
+        /// <param name="contentName">コンテンツ名</param>
         public Content(string contentName)
         {
             this._Name = contentName;
             this.Status = ContentStatus.Create;
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <returns></returns>
-        internal bool PreEnd()
-        {
-            bool bCheck = false;
 
-            if (Status == ContentStatus.Run)
-            {
-                bCheck = OnPreDestroy();
-                if (bCheck)
-                {
-                    Status = ContentStatus.PreDestroy;
-                }
-            }
-            if (Status == ContentStatus.Suspend)
-            {
-                bCheck = OnPreResume();
-                if (bCheck)
-                {
-                    Status = ContentStatus.PreResume;
-                }
-            }
-            return bCheck;
+
+        /// <summary>
+        /// コンテントを終了可能状態にする
+        /// </summary>
+        protected void CompleteStop()
+        {
+            StopCompleteFlag = true;
+            _Perspective.CompleteStop();
         }
 
         /// <summary>
-        /// 
+        /// コンテントを開始可能状態にする
         /// </summary>
-        /// <returns></returns>
-        internal bool PreStart(Perspective attach)
+        protected void CompleteStart()
         {
-            bool bCheck = false;
-            var oldPerspective = Perspective;
-            _Perspective = attach;
-            bCheck = OnStart();
-            if (bCheck)
+            StartCompleteFlag = true;
+            _Perspective.CompleteStart();
+        }
+
+        bool bProgressStop = false;
+
+        bool bProgressSuspend = false;
+
+        /// <summary>
+        /// ロールバックでの戻り先
+        /// </summary>
+        ContentStatus TransitionRollbak = ContentStatus.Initialize;
+
+        /// <summary>
+        /// 現在の状態にあわせた終了ハンドラを呼び出す。
+        /// ただし、Resumeは呼び出さない？
+        /// PreXXXの関連を調査する
+        /// </summary>
+        /// <returns>状態の終了に成功した場合はTrueを返す</returns>
+        internal void Forward()
+        {
+            _logger.Debug("Status={}",Status);
+            if (Status == ContentStatus.Idle)
             {
-                Status = ContentStatus.Start;
+                Status = ContentStatus.Resume;
+                OnResume();
+            }
+            else if (Status == ContentStatus.Resume)
+            {
+                Status = ContentStatus.Run;
+                OnRun();
+            }
+            else if (Status == ContentStatus.Run)
+            {
+                StartCompleteFlag = false;
+                Status = ContentStatus.Restart;
+                OnRestart();
+                Status = ContentStatus.Run;
+                OnRun();
+            }
+            else if (Status == ContentStatus.PreStop)
+            {
+                StopCompleteFlag = false;
+                Status = ContentStatus.Stop;
+                OnStop();
+            }
+            else if (Status == ContentStatus.Stop)
+            {
+                if (bProgressStop)
+                {
+                    Status = ContentStatus.End;
+                    OnEnd();
+                }
+                else if (bProgressSuspend)
+                {
+                    Status = ContentStatus.Suspend;
+                    OnSuspend();
+                }
+            }
+            else if (Status == ContentStatus.End)
+            {
+                bProgressStop = false;
+                bProgressSuspend = false;
+                _Perspective = null;
+                Status = ContentStatus.Idle;
+                OnIdle();
+            }
+            else if (Status == ContentStatus.Suspend)
+            {
+                Status = ContentStatus.PreResume;
+                OnPreResume();
+            }
+            else if (Status == ContentStatus.PreResume)
+            {
+                _logger.Debug("PreResumeのForward処理");
+                Status = ContentStatus.Resume;
+                OnResume();
             }
             else
             {
-                _Perspective = oldPerspective;
+                throw new ApplicationException("状態が不正です");
             }
-            return bCheck;
         }
 
-        /// <summary>
-        /// 終了ライフサイクル
-        /// </summary>
-        /// <returns></returns>
-        internal void ToDestroy()
+        internal void Discontinue()
         {
-            if (Status == ContentStatus.PreResume)
+            if (Status != ContentStatus.Suspend)
             {
-                OnDiscontinue();
-                Status = ContentStatus.Discontinue;
+                throw new ApplicationException("状態が不正です");
             }
-
-            OnDestroy();
-            Status = ContentStatus.Destroy;
-            _Perspective = null;
+            Status = ContentStatus.Discontinue;
+            OnDiscontinue();
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        internal void Run()
+        internal void Initialize()
         {
-            if (Status == ContentStatus.Run)
+            if (Status != ContentStatus.Create)
             {
-                Status = ContentStatus.Restart;
-                OnRestart();
+                throw new ApplicationException("状態が不正です");
             }
 
-            Status = ContentStatus.Run;
-
-            // OnRunは、実際にはワークフローメッセージを送信する
-            // このワークフローメッセージは、初期化メッセージとする。
-
-            // TODO: OnRun
+            Status = ContentStatus.Initialize;
+            OnInitialize();
         }
 
-        /// <summary>
-        /// 開始ライフサイクル
-        /// </summary>
-        /// <returns></returns>
         internal void Start()
         {
-            OnResume();
-            Status = ContentStatus.Resume;
+            Status = ContentStatus.Idle;
+            OnIdle();
         }
 
-        /// <summary>
-        /// 破棄ライフサイクル
-        /// </summary>
-        public void Destroy()
+        internal bool Stop()
         {
-            _Perspective = null;
+            _logger.Debug("コンテントを終了状態に遷移します(Content = {})", _Name);
+            if (Status != ContentStatus.Run)
+            {
+                throw new ApplicationException("状態が不正です");
+            }
+            bProgressStop = true;
+            bProgressSuspend = false;
+
+            TransitionRollbak = ContentStatus.Run;
+            Status = ContentStatus.PreStop;
+            return OnPreStop(); // Stop状態へ遷移してよいか？
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        public void Dispose()
+
+        internal bool Suspend()
         {
-            _Perspective = null;
+            _logger.Debug("コンテントをサスペンド状態に遷移します(Content = {})", _Name);
+            if (Status != ContentStatus.Run)
+            {
+                throw new ApplicationException("状態が不正です");
+            }
+            bProgressStop = false;
+            bProgressSuspend = true;
+
+            TransitionRollbak = ContentStatus.Run;
+            Status = ContentStatus.PreStop;
+            return OnPreStop(); // Stop状態へ遷移してよいか？
         }
+
+        internal bool Begin(Perspective Perspective)
+        {
+            _logger.Debug("コンテントを開始状態に遷移します(Content = {})", _Name);
+            if (Status != ContentStatus.Idle && Status != ContentStatus.Suspend)
+            {
+                throw new ApplicationException(string.Format("状態が不正です(Status={0})", Status));
+            }
+            _Perspective = Perspective;
+            TransitionRollbak = ContentStatus.Idle;
+            Status = ContentStatus.PreResume;
+            return OnPreResume(); // Resume状態へ遷移してよいか？
+        }
+
+        internal void Dispose()
+        {
+            Status = ContentStatus.Destroy;
+            OnDestroy();
+        }
+
 
         /// <summary>
         /// コンテント名を取得します
@@ -169,21 +242,26 @@ namespace Hyperion.Pf.Workflow
         /// <returns></returns>
         public ContentStatus Status { get; private set; }
 
+
+        internal bool StopCompleteFlag { get; private set; }
+
+        internal bool StartCompleteFlag { get; private set; }
+        
         /// <summary>
         /// Initialize状態遷移時のイベントハンドラ
         /// </summary>
         public abstract void OnInitialize();
 
         /// <summary>
-        /// Start状態遷移時のイベントハンドラ
+        /// Idle状態遷移時のイベントハンドラ
         /// </summary>
-        public abstract bool OnStart();
+        public abstract void OnIdle();
 
         /// <summary>
         /// 
         /// </summary>
         /// <returns></returns>
-        public abstract bool OnRestart();
+        public abstract void OnRestart();
 
         /// <summary>
         /// Resume状態遷移時のイベントハンドラ
@@ -200,17 +278,6 @@ namespace Hyperion.Pf.Workflow
         /// </summary>
         public abstract void OnSuspend();
 
-        /// <summary>
-        /// PreDestroy状態遷移時のイベントハンドラ
-        /// </summary>
-        /// <returns></returns>
-        public abstract bool OnPreDestroy();
-
-        /// <summary>
-        /// PreResume状態遷移時のイベントハンドラ
-        /// </summary>
-        /// <returns></returns>
-        public abstract bool OnPreResume();
 
         /// <summary>
         /// Discontinue状態遷移時のイベントハンドラ
@@ -231,5 +298,19 @@ namespace Hyperion.Pf.Workflow
         /// End状態遷移時のイベントハンドラ
         /// </summary>
         public abstract void OnEnd();
+
+        /// <summary>
+        /// PreStop状態遷移時のイベントハンドラ
+        /// </summary>
+        /// <returns></returns>
+        public abstract bool OnPreStop();
+
+        /// <summary>
+        /// PreResume状態遷移時のイベントハンドラ
+        /// </summary>
+        /// <returns></returns>
+        public abstract bool OnPreResume();
+
+
     }
 }

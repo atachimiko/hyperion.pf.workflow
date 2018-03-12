@@ -33,6 +33,16 @@ namespace Hyperion.Pf.Workflow
         /// <returns></returns>
         public ArbitrationMode Mode { get; private set; }
 
+        internal void CompleteStop()
+        {
+            _Context.CompleteStop();
+        }
+
+        internal void CompleteStart()
+        {
+            _Context.CompleteStart();
+        }
+
         /// <summary>
         /// パースペクティブ名を取得します
         /// </summary>
