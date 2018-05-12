@@ -26,7 +26,7 @@ namespace Hyperion.Pf.Workflow.Tests
             contentBuilders.Add(BuildContentBuilder("MyContent1"));
 
             // テスト対象の生成と設定
-            var manager = new WorkflowManager();
+            var manager = new HarmonicManager();
             manager.Verify(contentBuilders);
 
             var dict = new Dictionary<string, string>();
@@ -61,7 +61,7 @@ namespace Hyperion.Pf.Workflow.Tests
             contentBuilders.Add(BuildContentBuilder("MyContent2"));
 
             // テスト対象の生成と設定
-            var manager = new WorkflowManager();
+            var manager = new HarmonicManager();
             manager.Verify(contentBuilders);
 
             var dict = new Dictionary<string, string>();
@@ -106,7 +106,7 @@ namespace Hyperion.Pf.Workflow.Tests
             contentBuilders.Add(BuildContentBuilder("MyContent2"));
 
             // テスト対象の生成と設定
-            var manager = new WorkflowManager();
+            var manager = new HarmonicManager();
             manager.Verify(contentBuilders);
 
             var dict = new Dictionary<string, string>();
@@ -149,7 +149,7 @@ namespace Hyperion.Pf.Workflow.Tests
             contentBuilders.Add(BuildContentBuilder("MyContent2"));
 
             // テスト対象の生成と設定
-            var manager = new WorkflowManager();
+            var manager = new HarmonicManager();
             manager.Verify(contentBuilders);
 
             var dict = new Dictionary<string, string>();
@@ -196,7 +196,7 @@ namespace Hyperion.Pf.Workflow.Tests
             contentBuilders.Add(BuildContentBuilder("MyContent2"));
 
             // テスト対象の生成と設定
-            var manager = new WorkflowManager();
+            var manager = new HarmonicManager();
             manager.Verify(contentBuilders);
 
             var dict = new Dictionary<string, string>();
@@ -243,7 +243,7 @@ namespace Hyperion.Pf.Workflow.Tests
             contentBuilders.Add(BuildContentBuilder("MyContent2"));
 
             // テスト対象の生成と設定
-            var manager = new WorkflowManager();
+            var manager = new HarmonicManager();
             manager.Verify(contentBuilders);
 
             var dict = new Dictionary<string, string>();
@@ -295,7 +295,7 @@ namespace Hyperion.Pf.Workflow.Tests
             contentBuilders.Add(BuildContentBuilder("MyContent2"));
 
             // テスト対象の生成と設定
-            var manager = new WorkflowManager();
+            var manager = new HarmonicManager();
             manager.Verify(contentBuilders);
 
             var dict = new Dictionary<string, string>();
@@ -351,7 +351,7 @@ namespace Hyperion.Pf.Workflow.Tests
             contentBuilders.Add(BuildContentBuilder("MyContent2"));
 
             // テスト対象の生成と設定
-            var manager = new WorkflowManager();
+            var manager = new HarmonicManager();
             manager.Verify(contentBuilders);
 
             var dict = new Dictionary<string, string>();

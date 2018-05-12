@@ -3,24 +3,6 @@ using NLog;
 
 namespace Hyperion.Pf.Workflow
 {
-    public enum ContentStatus
-    {
-        Create,
-
-        Initialize,
-        Idle,
-        Run,
-        Restart,
-        Stop,
-        Suspend,
-        Resume,
-        PreStop,
-        Discontinue,
-        PreResume,
-        Destroy,
-        End
-    }
-
     /// <summary>
     /// コンテンツ
     /// </summary>
@@ -35,7 +17,6 @@ namespace Hyperion.Pf.Workflow
 
         string _Name;
 
-
         /// <summary>
         /// コンストラクタ
         /// </summary>
@@ -45,8 +26,6 @@ namespace Hyperion.Pf.Workflow
             this._Name = contentName;
             this.Status = ContentStatus.Create;
         }
-
-
 
         /// <summary>
         /// コンテントを終了可能状態にする
@@ -83,7 +62,7 @@ namespace Hyperion.Pf.Workflow
         /// <returns>状態の終了に成功した場合はTrueを返す</returns>
         internal void Forward()
         {
-            _logger.Debug("Status={}",Status);
+            _logger.Debug("Status={}", Status);
             if (Status == ContentStatus.Idle)
             {
                 Status = ContentStatus.Resume;
@@ -246,7 +225,7 @@ namespace Hyperion.Pf.Workflow
         internal bool StopCompleteFlag { get; private set; }
 
         internal bool StartCompleteFlag { get; private set; }
-        
+
         /// <summary>
         /// Initialize状態遷移時のイベントハンドラ
         /// </summary>

@@ -5,14 +5,19 @@ using System.Linq;
 namespace Hyperion.Pf.Workflow
 {
     /// <summary>
-    /// パースペクティブ
+    /// パースペクティブ情報クラス
     /// </summary>
     /// <remarks>
+    /// このクラスでは、コンテントが設定されたフレームの管理を行います。
+    /// 他のパースペクティブとの関連性を調停モードで設定します。
     /// 1つのフレームに1つのコンテントを設定できます。
     /// </remarks>
     public class Perspective
     {
-        private readonly WorkflowManager _Context;
+        /// <summary>
+        /// 所属するマネージャクラス
+        /// </summary>
+        private readonly HarmonicManager _Context;
 
         /// <summary>
         /// キー=フレーム名
@@ -33,22 +38,13 @@ namespace Hyperion.Pf.Workflow
         /// <returns></returns>
         public ArbitrationMode Mode { get; private set; }
 
-        internal void CompleteStop()
-        {
-            _Context.CompleteStop();
-        }
-
-        internal void CompleteStart()
-        {
-            _Context.CompleteStart();
-        }
 
         /// <summary>
         /// パースペクティブ名を取得します
         /// </summary>
         /// <returns></returns>
         public string Name { get; private set; }
-
+       
         /// <summary>
         /// パースペクティブに関連付けされたコンテントのフレーム一覧を取得します
         /// </summary>
@@ -120,7 +116,7 @@ namespace Hyperion.Pf.Workflow
         /// <param name="PerspectiveName">パースペクティブ名</param>
         /// <param name="Mode">調停モード</param>
         /// <param name="ContentDict">フレーム別コンテントビルダー対応辞書</param>
-        public Perspective(string PerspectiveName, ArbitrationMode Mode, Dictionary<string, string> ContentDict, WorkflowManager context)
+        public Perspective(string PerspectiveName, ArbitrationMode Mode, Dictionary<string, string> ContentDict, HarmonicManager context)
         {
             this._Context = context;
             this.Name = PerspectiveName;
@@ -130,6 +126,22 @@ namespace Hyperion.Pf.Workflow
             {
                 _ContentDict.Add(key, ContentDict[key]);
             }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        internal void CompleteStop()
+        {
+            _Context.CompleteStop();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        internal void CompleteStart()
+        {
+            _Context.CompleteStart();
         }
 
         internal Content GetFrameContent(string frameName)
