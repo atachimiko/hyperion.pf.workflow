@@ -1,6 +1,6 @@
 using System;
 
-namespace Pixstock.Core
+namespace Hyperion.Pf.Workflow.StateMachine
 {
     public delegate int _FireInvokeWorkflowEvent(WorkflowMessageEventArgs param);
     public delegate int _FireCallbackWorkflowEvent(WorkflowMessageEventArgs param);

@@ -1,5 +1,5 @@
 using System;
-using NLog;
+//using NLog;
 
 namespace Hyperion.Pf.Workflow
 {
@@ -8,7 +8,7 @@ namespace Hyperion.Pf.Workflow
     /// </summary>
     public abstract class Content
     {
-        private static Logger _logger = LogManager.GetCurrentClassLogger();
+        //private static Logger _logger = LogManager.GetCurrentClassLogger();
 
         /// <summary>
         /// 所属するパースペクティブ
@@ -62,7 +62,7 @@ namespace Hyperion.Pf.Workflow
         /// <returns>状態の終了に成功した場合はTrueを返す</returns>
         internal void Forward()
         {
-            _logger.Debug("Status={}", Status);
+            //_logger.Debug("Status={}", Status);
             if (Status == ContentStatus.Idle)
             {
                 Status = ContentStatus.Resume;
@@ -115,7 +115,7 @@ namespace Hyperion.Pf.Workflow
             }
             else if (Status == ContentStatus.PreResume)
             {
-                _logger.Debug("PreResumeのForward処理");
+                //_logger.Debug("PreResumeのForward処理");
                 Status = ContentStatus.Resume;
                 OnResume();
             }
@@ -154,7 +154,7 @@ namespace Hyperion.Pf.Workflow
 
         internal bool Stop()
         {
-            _logger.Debug("コンテントを終了状態に遷移します(Content = {})", _Name);
+            //_logger.Debug("コンテントを終了状態に遷移します(Content = {})", _Name);
             if (Status != ContentStatus.Run)
             {
                 throw new ApplicationException("状態が不正です");
@@ -170,7 +170,7 @@ namespace Hyperion.Pf.Workflow
 
         internal bool Suspend()
         {
-            _logger.Debug("コンテントをサスペンド状態に遷移します(Content = {})", _Name);
+            //_logger.Debug("コンテントをサスペンド状態に遷移します(Content = {})", _Name);
             if (Status != ContentStatus.Run)
             {
                 throw new ApplicationException("状態が不正です");
@@ -185,7 +185,7 @@ namespace Hyperion.Pf.Workflow
 
         internal bool Begin(Perspective Perspective)
         {
-            _logger.Debug("コンテントを開始状態に遷移します(Content = {})", _Name);
+            //_logger.Debug("コンテントを開始状態に遷移します(Content = {})", _Name);
             if (Status != ContentStatus.Idle && Status != ContentStatus.Suspend)
             {
                 throw new ApplicationException(string.Format("状態が不正です(Status={0})", Status));

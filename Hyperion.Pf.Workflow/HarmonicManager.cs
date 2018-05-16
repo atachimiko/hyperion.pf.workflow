@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using NLog;
 
 namespace Hyperion.Pf.Workflow
 {
@@ -31,8 +30,6 @@ namespace Hyperion.Pf.Workflow
     /// </remarks>
     public class HarmonicManager
     {
-        private static Logger _logger = LogManager.GetCurrentClassLogger();
-
         private bool _VerifiedFlag = false;
 
         private bool _PerspectiveProcessingStartFlag = false; // パースペクティブ起動中処理フラグ
@@ -44,7 +41,6 @@ namespace Hyperion.Pf.Workflow
 
         internal void CompleteStop()
         {
-            _logger.Debug("IN");
             // すべてのStop状態のコンテントが、CompleteStopを呼び出しているかチェックする
             var r = from u in Contents
                     where (u.Status == ContentStatus.PreStop || u.Status == ContentStatus.Stop) && u.StopCompleteFlag == false
@@ -65,13 +61,10 @@ namespace Hyperion.Pf.Workflow
                     content.Forward(); // PreResume状態コンテントのForwardなので、Resume状態に遷移する
                 }
             }
-            _logger.Debug("OUT");
         }
 
         internal void CompleteStart()
         {
-            _logger.Debug("IN");
-
             // すべてのResume状態のコンテントが、CompleteStartを呼び出しているかチェックする
             var r = from u in Contents
                     where u.Status == ContentStatus.Resume && u.StartCompleteFlag == false
@@ -111,7 +104,6 @@ namespace Hyperion.Pf.Workflow
 
                 _PerspectiveProcessingStartFlag = false; // パースペクティブの起動完了
             }
-            _logger.Debug("OUT");
         }
 
         /// <summary>
@@ -218,7 +210,7 @@ namespace Hyperion.Pf.Workflow
 
             if (result.EndContentList.Count == 0)
             {
-                _logger.Debug("終了するコンテントがないため、新しいコンテントを起動します");
+                //_logger.Debug("終了するコンテントがないため、新しいコンテントを起動します");
                 foreach (var content in result.StartContentList)
                 {
                     content.Forward();
@@ -329,7 +321,7 @@ namespace Hyperion.Pf.Workflow
         /// </summary>
         private DoArbitrationResult doArbitration_AWAB(Perspective pPerspective)
         {
-            _logger.Debug("AWAB調停処理を開始します");
+            //_logger.Debug("AWAB調停処理を開始します");
             DoArbitrationResult result = new DoArbitrationResult();
             WorkflowManagerContext context = new WorkflowManagerContext();
 
@@ -343,7 +335,7 @@ namespace Hyperion.Pf.Workflow
                 var stack = _FrameList.GetContentStack(frameName);
                 if (stack.Count > 0)
                 {
-                    _logger.Debug("{}フレームの最上位コンテントの終了ライフサイクル処理を開始します", frameName);
+                    //_logger.Debug("{}フレームの最上位コンテントの終了ライフサイクル処理を開始します", frameName);
                     wEndContent = stack.Peek();
                     if (wEndContent != startContent)
                     {
@@ -355,7 +347,7 @@ namespace Hyperion.Pf.Workflow
                 {
                     startContent = pPerspective.GetFrameContent(frameName);
 
-                    _logger.Debug("{}フレームに新規コンテントの開始ライフサイクル処理を開始します", frameName);
+                    //_logger.Debug("{}フレームに新規コンテントの開始ライフサイクル処理を開始します", frameName);
                     bPreStartSuccess = startContent.Begin(pPerspective);
 
                     if (bPreStartSuccess)
@@ -363,11 +355,11 @@ namespace Hyperion.Pf.Workflow
                         if (stack.Count > 0)
                         {
                             wEndContent = stack.Pop(); // スタックから除去する
-                            _logger.Debug("{}フレームのコンテントスタックから除去します", frameName);
+                            //_logger.Debug("{}フレームのコンテントスタックから除去します", frameName);
                             result.EndContentList.Add(wEndContent);
                         }
 
-                        _logger.Debug("{}フレームのコンテントスタックに新規コンテントを追加します。", frameName);
+                        //_logger.Debug("{}フレームのコンテントスタックに新規コンテントを追加します。", frameName);
                         // 新しいパースペクティブのコンテントをスタックに積む
                         stack.Push(startContent);
 
@@ -375,13 +367,13 @@ namespace Hyperion.Pf.Workflow
                     }
                     else
                     {
-                        _logger.Warn("{}フレームの新規コンテントを追加に失敗しました。ロールバックを行います。", frameName);
+                        //_logger.Warn("{}フレームの新規コンテントを追加に失敗しました。ロールバックを行います。", frameName);
                         // TODO: Stackのコンテント(wEndContent)のロールバック
                     }
                 }
                 else
                 {
-                    _logger.Warn("{}フレームの最上位コンテントの終了ライフサイクル処理に失敗しました", frameName);
+                    //_logger.Warn("{}フレームの最上位コンテントの終了ライフサイクル処理に失敗しました", frameName);
                 }
             }
 
@@ -390,7 +382,7 @@ namespace Hyperion.Pf.Workflow
 
         private DoArbitrationResult doArbitration_BWAB(Perspective pPerspective)
         {
-            _logger.Debug("BWAB調停処理を開始します");
+            //_logger.Debug("BWAB調停処理を開始します");
             DoArbitrationResult result = new DoArbitrationResult();
 
             foreach (var frameName in pPerspective.FrameList)
@@ -402,18 +394,18 @@ namespace Hyperion.Pf.Workflow
                 var stack = _FrameList.GetContentStack(frameName);
                 if (stack.Count > 0)
                 {
-                    _logger.Debug("{}フレームの最上位コンテントが存在するためスキップします。", frameName);
+                    //_logger.Debug("{}フレームの最上位コンテントが存在するためスキップします。", frameName);
                     continue;
                 }
 
                 startContent = pPerspective.GetFrameContent(frameName);
 
-                _logger.Debug("{}フレームに新規コンテントの開始ライフサイクル処理を開始します", frameName);
+                //_logger.Debug("{}フレームに新規コンテントの開始ライフサイクル処理を開始します", frameName);
                 bPreStartSuccess = startContent.Begin(pPerspective);
 
                 if (bPreStartSuccess)
                 {
-                    _logger.Debug("{}フレームのコンテントスタックに新規コンテントを追加します。", frameName);
+                    //_logger.Debug("{}フレームのコンテントスタックに新規コンテントを追加します。", frameName);
                     // 新しいパースペクティブのコンテントをスタックに積む
                     stack.Push(startContent);
 
@@ -421,7 +413,7 @@ namespace Hyperion.Pf.Workflow
                 }
                 else
                 {
-                    _logger.Warn("{}フレームの新規コンテントを追加に失敗しました。ロールバックを行います。", frameName);
+                    //_logger.Warn("{}フレームの新規コンテントを追加に失敗しました。ロールバックを行います。", frameName);
                     // TODO: Stackのコンテント(wEndContent)のロールバック
                 }
             }
@@ -431,7 +423,7 @@ namespace Hyperion.Pf.Workflow
 
         private DoArbitrationResult doArbitration_OVERRIDE(Perspective pPerspective)
         {
-            _logger.Debug("OVERRIDE調停処理を開始します");
+            //_logger.Debug("OVERRIDE調停処理を開始します");
             DoArbitrationResult result = new DoArbitrationResult();
 
             List<Perspective> clearPerspectiveList = new List<Perspective>(); // クリアするPerspective
@@ -476,12 +468,12 @@ namespace Hyperion.Pf.Workflow
                 var stack = _FrameList.GetContentStack(frameName);
                 startContent = pPerspective.GetFrameContent(frameName);
 
-                _logger.Debug("{}フレームに新規コンテントの開始ライフサイクル処理を開始します", frameName);
+                //_logger.Debug("{}フレームに新規コンテントの開始ライフサイクル処理を開始します", frameName);
                 bPreStartSuccess = startContent.Begin(pPerspective);
 
                 if (bPreStartSuccess)
                 {
-                    _logger.Debug("{}フレームのコンテントスタックに新規コンテントを追加します。", frameName);
+                    //_logger.Debug("{}フレームのコンテントスタックに新規コンテントを追加します。", frameName);
                     // 新しいパースペクティブのコンテントをスタックに積む
                     stack.Push(startContent);
 
@@ -489,7 +481,7 @@ namespace Hyperion.Pf.Workflow
                 }
                 else
                 {
-                    _logger.Warn("{}フレームの新規コンテントを追加に失敗しました。ロールバックを行います。", frameName);
+                    //_logger.Warn("{}フレームの新規コンテントを追加に失敗しました。ロールバックを行います。", frameName);
                     // TODO: Stackのコンテント(wEndContent)のロールバック
                 }
             }
@@ -498,7 +490,7 @@ namespace Hyperion.Pf.Workflow
         }
 
         private DoArbitrationResult doArbitration_INTRCOMP(Perspective pPerspective) {
-            _logger.Debug("INTRCOMP調停処理を開始します");
+            //_logger.Debug("INTRCOMP調停処理を開始します");
             DoArbitrationResult result = new DoArbitrationResult();
 
             List<Perspective> clearPerspectiveList = new List<Perspective>(); // クリアするPerspective
@@ -541,12 +533,12 @@ namespace Hyperion.Pf.Workflow
                 var stack = _FrameList.GetContentStack(frameName);
                 startContent = pPerspective.GetFrameContent(frameName);
 
-                _logger.Debug("{}フレームに新規コンテントの開始ライフサイクル処理を開始します", frameName);
+                //_logger.Debug("{}フレームに新規コンテントの開始ライフサイクル処理を開始します", frameName);
                 bPreStartSuccess = startContent.Begin(pPerspective);
 
                 if (bPreStartSuccess)
                 {
-                    _logger.Debug("{}フレームのコンテントスタックに新規コンテントを追加します。", frameName);
+                    //_logger.Debug("{}フレームのコンテントスタックに新規コンテントを追加します。", frameName);
                     // 新しいパースペクティブのコンテントをスタックに積む
                     stack.Push(startContent);
 
@@ -554,7 +546,7 @@ namespace Hyperion.Pf.Workflow
                 }
                 else
                 {
-                    _logger.Warn("{}フレームの新規コンテントを追加に失敗しました。ロールバックを行います。", frameName);
+                    //_logger.Warn("{}フレームの新規コンテントを追加に失敗しました。ロールバックを行います。", frameName);
                     // TODO: Stackのコンテント(wEndContent)のロールバック
                 }
             }
@@ -563,7 +555,7 @@ namespace Hyperion.Pf.Workflow
         }
 
         private DoArbitrationResult doArbitration_INTRCOOR(Perspective pPerspective) {
-            _logger.Debug("INTRCOOR調停処理を開始します");
+            //_logger.Debug("INTRCOOR調停処理を開始します");
             DoArbitrationResult result = new DoArbitrationResult();
 
             List<Perspective> clearPerspectiveList = new List<Perspective>(); // クリアするPerspective
@@ -606,12 +598,12 @@ namespace Hyperion.Pf.Workflow
                 var stack = _FrameList.GetContentStack(frameName);
                 startContent = pPerspective.GetFrameContent(frameName);
 
-                _logger.Debug("{}フレームに新規コンテントの開始ライフサイクル処理を開始します", frameName);
+                //_logger.Debug("{}フレームに新規コンテントの開始ライフサイクル処理を開始します", frameName);
                 bPreStartSuccess = startContent.Begin(pPerspective);
 
                 if (bPreStartSuccess)
                 {
-                    _logger.Debug("{}フレームのコンテントスタックに新規コンテントを追加します。", frameName);
+                    //_logger.Debug("{}フレームのコンテントスタックに新規コンテントを追加します。", frameName);
                     // 新しいパースペクティブのコンテントをスタックに積む
                     stack.Push(startContent);
 
@@ -619,7 +611,7 @@ namespace Hyperion.Pf.Workflow
                 }
                 else
                 {
-                    _logger.Warn("{}フレームの新規コンテントを追加に失敗しました。ロールバックを行います。", frameName);
+                    //_logger.Warn("{}フレームの新規コンテントを追加に失敗しました。ロールバックを行います。", frameName);
                     // TODO: Stackのコンテント(wEndContent)のロールバック
                 }
             }

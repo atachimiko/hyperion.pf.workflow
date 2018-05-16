@@ -5,6 +5,8 @@ using Appccelerate.StateMachine.Infrastructure;
 using Appccelerate.StateMachine.Machine;
 using Appccelerate.StateMachine.Persistence;
 using Appccelerate.StateMachine.Reports;
+using Hyperion.Pf.Workflow.StateMachine;
+
 namespace Pixstock.Core
 {
 

@@ -1,7 +1,7 @@
 
 using System;
 
-namespace Pixstock.Core
+namespace Hyperion.Pf.Workflow.StateMachine
 {
     /// <summary>
     /// Pfに移動する

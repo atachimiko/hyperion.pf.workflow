@@ -1,11 +1,12 @@
 using System;
 using System.Collections.Generic;
+using Appccelerate.StateMachine;
 using Appccelerate.StateMachine.AsyncMachine;
 using Hyperion.Pf.Workflow.StateMachine.Eventsas;
 
 namespace Hyperion.Pf.Workflow.StateMachine
 {
-    public class FrameStateMachine<T, W> : StateMachine<T, W>
+    public class FrameStateMachine<T, W> : AsyncPassiveStateMachine<T, W>
         where T : IComparable
         where W : IComparable
     {
@@ -20,7 +21,8 @@ namespace Hyperion.Pf.Workflow.StateMachine
         /// <param name="menuList"></param>
         protected void ShowFrame(string frameName, ICollection<int> menuList)
         {
-            this.RaiseEvent(this.InvokeShowFrame, new InvokeShowFrameEventArgs(frameName, menuList), true);
+            Console.WriteLine("ShowFrame");
+            //this.RaiseEvent(this.InvokeShowFrame, new InvokeShowFrameEventArgs(frameName, menuList), true);
         }
 
         /// <summary>
@@ -30,7 +32,7 @@ namespace Hyperion.Pf.Workflow.StateMachine
         /// <param name="menuList"></param>
         protected void HideFrame(string frameName, ICollection<int> menuList)
         {
-            this.RaiseEvent(this.InvokeHideFrame, new InvokeHideFrameEventArgs(frameName, menuList), true);
+            //this.RaiseEvent(this.InvokeHideFrame, new InvokeHideFrameEventArgs(frameName, menuList), true);
         }
 
         private void RaiseEvent<EVPARAM>(EventHandler<EVPARAM> eventHandler, EVPARAM arguments, bool raiseEventOnException)
